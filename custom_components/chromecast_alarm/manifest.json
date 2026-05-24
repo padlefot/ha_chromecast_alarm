@@ -1,0 +1,12 @@
+{
+  "domain": "chromecast_alarm",
+  "name": "Chromecast Alarm",
+  "version": "0.1.0",
+  "documentation": "http://192.168.2.6:3001/padlefot/ha_chromecast_alarm",
+  "issue_tracker": "http://192.168.2.6:3001/padlefot/ha_chromecast_alarm/issues",
+  "codeowners": ["@padlefot"],
+  "config_flow": true,
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "requirements": ["yt-dlp>=2024.12.0"]
+}

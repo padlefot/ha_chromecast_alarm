@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Chromecast Alarm",
+        "description": "Configure a wake-up alarm that casts a random item from your library to the target media player.",
+        "data": {
+          "name": "Name",
+          "target_media_player": "Target media player",
+          "time": "Time",
+          "days": "Days",
+          "volume": "Volume",
+          "snooze_minutes": "Snooze duration (minutes)",
+          "stop_after_minutes": "Auto-stop after (minutes)",
+          "library_text": "Library (one `label|url` per line)"
+        }
+      }
+    },
+    "error": {
+      "library_empty": "The library must contain at least one item."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Chromecast Alarm",
+        "data": {
+          "name": "Name",
+          "target_media_player": "Target media player",
+          "time": "Time",
+          "days": "Days",
+          "volume": "Volume",
+          "snooze_minutes": "Snooze duration (minutes)",
+          "stop_after_minutes": "Auto-stop after (minutes)",
+          "library_text": "Library (one `label|url` per line)"
+        }
+      }
+    },
+    "error": {
+      "library_empty": "The library must contain at least one item."
+    }
+  },
+  "services": {
+    "fire": { "name": "Fire alarm now", "description": "Fire one or more alarms immediately." },
+    "stop": { "name": "Stop alarm playback", "description": "Stop ongoing playback." },
+    "snooze": { "name": "Snooze alarm", "description": "Stop and re-fire after the snooze duration." }
+  }
+}
