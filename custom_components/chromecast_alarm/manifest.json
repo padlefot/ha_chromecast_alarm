@@ -1,7 +1,7 @@
 {
   "domain": "chromecast_alarm",
   "name": "Chromecast Alarm",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "documentation": "http://192.168.2.6:3001/padlefot/ha_chromecast_alarm",
   "issue_tracker": "http://192.168.2.6:3001/padlefot/ha_chromecast_alarm/issues",
   "codeowners": ["@padlefot"],
