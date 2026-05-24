@@ -1,0 +1,51 @@
+fire:
+  name: Fire alarm now
+  description: Fire one or more Chromecast Alarm switches immediately.
+  fields:
+    entity_id:
+      name: Alarm switch(es)
+      description: switch.<alarm> entity ID(s) belonging to this integration.
+      required: true
+      selector:
+        entity:
+          domain: switch
+          integration: chromecast_alarm
+          multiple: true
+
+stop:
+  name: Stop alarm playback
+  description: Stop ongoing playback on the alarm's target media player.
+  fields:
+    entity_id:
+      name: Alarm switch(es)
+      description: switch.<alarm> entity ID(s) belonging to this integration.
+      required: true
+      selector:
+        entity:
+          domain: switch
+          integration: chromecast_alarm
+          multiple: true
+
+snooze:
+  name: Snooze alarm
+  description: Snooze the alarm — stop current playback and re-fire after the configured (or supplied) number of minutes.
+  fields:
+    entity_id:
+      name: Alarm switch(es)
+      description: switch.<alarm> entity ID(s) belonging to this integration.
+      required: true
+      selector:
+        entity:
+          domain: switch
+          integration: chromecast_alarm
+          multiple: true
+    minutes:
+      name: Snooze duration (minutes)
+      description: Override the configured snooze duration for this call.
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 120
+          step: 1
+          unit_of_measurement: min
