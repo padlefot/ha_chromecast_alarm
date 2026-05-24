@@ -194,6 +194,8 @@ class AlarmRunner:
 
     async def async_handle_options_updated(self) -> None:
         """Called on options/data change — re-arm scheduler from scratch."""
+        self._state.dismissed_date = None
+        await self._store.async_save(self._state)
         self._arm_time_listener()
         self._refresh_next_fire()
 
