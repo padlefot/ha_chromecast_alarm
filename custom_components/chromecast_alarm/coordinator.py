@@ -1,6 +1,7 @@
 """AlarmRunner: scheduling, firing, snoozing, dismissing per config entry."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 from datetime import date, datetime, time, timedelta
@@ -293,6 +294,16 @@ class AlarmRunner:
             _LOGGER.exception("[%s] Failed to extract media URL for %s", self.entry.title, url)
             return
         try:
+            # Clear any existing media session before casting; without this,
+            # Chromecasts with a stale app (e.g. Music Assistant) silently
+            # reject the new stream.
+            await self.hass.services.async_call(
+                "media_player",
+                "media_stop",
+                {"entity_id": self.target},
+                blocking=True,
+            )
+            await asyncio.sleep(1)
             await self.hass.services.async_call(
                 "media_player",
                 "volume_set",
