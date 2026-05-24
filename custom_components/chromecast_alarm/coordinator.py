@@ -311,10 +311,12 @@ class AlarmRunner:
                 blocking=True,
             )
             await asyncio.sleep(1)
+            # Mute before casting to suppress the Chromecast connection chime,
+            # then restore the desired volume after playback starts.
             await self.hass.services.async_call(
                 "media_player",
                 "volume_set",
-                {"entity_id": self.target, "volume_level": self.volume},
+                {"entity_id": self.target, "volume_level": 0.0},
                 blocking=True,
             )
             await self.hass.services.async_call(
@@ -326,6 +328,13 @@ class AlarmRunner:
                     "media_content_type": "music",
                 },
                 blocking=False,
+            )
+            await asyncio.sleep(3)
+            await self.hass.services.async_call(
+                "media_player",
+                "volume_set",
+                {"entity_id": self.target, "volume_level": self.volume},
+                blocking=True,
             )
         except Exception:
             _LOGGER.exception("[%s] play_media failed", self.entry.title)
