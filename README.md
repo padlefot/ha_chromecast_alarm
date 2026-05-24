@@ -6,7 +6,7 @@ YouTube URLs are played via on-the-fly audio extraction with `yt-dlp` (bundled a
 
 ## Features
 
-- One config entry per alarm (mirrors how Adaptive Lighting models rooms)
+- One config entry per alarm
 - Built-in scheduler with weekday selection — no automations to wire
 - Random pick from a per-alarm library on each fire
 - YouTube URL playback via `yt-dlp` extraction
@@ -22,6 +22,7 @@ YouTube URLs are played via on-the-fly audio extraction with `yt-dlp` (bundled a
 | `button.<slug>_snooze` | Pause current alarm, re-fire after `snooze_minutes` |
 | `button.<slug>_dismiss` | Stop and suppress further fires until tomorrow |
 | `sensor.<slug>_next_fire` | Timestamp of the next scheduled fire |
+| `event.<slug>_event` | Fires `alarm_fired` event for automation triggers |
 
 ## Services
 
@@ -33,7 +34,7 @@ YouTube URLs are played via on-the-fly audio extraction with `yt-dlp` (bundled a
 
 ## Installation
 
-1. In HACS → Custom repositories, add `http://192.168.2.6:3001/padlefot/ha_chromecast_alarm` with category **Integration**.
+1. In HACS → Custom repositories, add `https://github.com/padlefot/ha_chromecast_alarm` with category **Integration**.
 2. Search for **Chromecast Alarm** and install.
 3. Restart Home Assistant.
 4. Settings → Devices & Services → **+ Add Integration** → search **Chromecast Alarm**.
@@ -64,7 +65,7 @@ Morning radio|http://stream.example.com/radio.mp3
 
 ## Status
 
-v0.1 — initial release. See [the plan](https://example.invalid/plan) for the design.
+v0.2 — added event entity for automation triggers, fixed repeated fire stale stream bug.
 
 ## License
 
