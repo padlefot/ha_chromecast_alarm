@@ -3,7 +3,7 @@ from __future__ import annotations
 
 DOMAIN = "chromecast_alarm"
 
-PLATFORMS = ["switch", "button", "sensor"]
+PLATFORMS = ["switch", "button", "sensor", "event"]
 
 # Config / options keys
 CONF_TARGET = "target_media_player"

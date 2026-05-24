@@ -67,6 +67,7 @@ class AlarmRunner:
         self._unsub_autostop: CALLBACK_TYPE | None = None
         self._next_fire: datetime | None = None
         self._listeners: list[Callable[[], None]] = []
+        self._event_callback: Callable[[str, dict], None] | None = None
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -106,6 +107,12 @@ class AlarmRunner:
                 self._listeners.remove(cb)
 
         return _unsub
+
+    def set_event_callback(self, cb: Callable[[str, dict], None]) -> None:
+        self._event_callback = cb
+
+    def clear_event_callback(self) -> None:
+        self._event_callback = None
 
     def _notify(self) -> None:
         for cb in list(self._listeners):
@@ -324,6 +331,8 @@ class AlarmRunner:
             _LOGGER.exception("[%s] play_media failed", self.entry.title)
             return
         self._is_firing = True
+        if self._event_callback:
+            self._event_callback("alarm_fired", {"label": label, "url": url, "target": self.target})
         # Arm auto-stop
         if self._unsub_autostop:
             self._unsub_autostop()
