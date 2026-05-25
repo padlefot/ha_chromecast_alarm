@@ -11,10 +11,15 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_DAYS,
+    CONF_TIME,
+    DAY_CODES,
     DATA_RUNNERS,
     DOMAIN,
     PLATFORMS,
     SERVICE_FIRE,
+    SERVICE_SET_DAYS,
+    SERVICE_SET_TIME,
     SERVICE_SNOOZE,
     SERVICE_STOP,
 )
@@ -81,6 +86,23 @@ _SNOOZE_SCHEMA = vol.Schema(
     }
 )
 
+_SET_TIME_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required("time"): cv.string,
+    }
+)
+
+_SET_DAYS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required("days"): vol.All(
+            cv.ensure_list,
+            [vol.In(DAY_CODES)],
+        ),
+    }
+)
+
 
 def _runners_for_entity_ids(hass: HomeAssistant, entity_ids: list[str]) -> list[AlarmRunner]:
     """Resolve entity_ids to runners. Accepts switch.<slug> entities owned by this domain."""
@@ -118,6 +140,20 @@ def _register_services(hass: HomeAssistant) -> None:
         for runner in _runners_for_entity_ids(hass, call.data[ATTR_ENTITY_ID]):
             await runner.async_snooze(minutes)
 
+    async def _set_time(call: ServiceCall) -> None:
+        new_time = call.data["time"]
+        for runner in _runners_for_entity_ids(hass, call.data[ATTR_ENTITY_ID]):
+            updated = {**runner.entry.options, CONF_TIME: new_time}
+            hass.config_entries.async_update_entry(runner.entry, options=updated)
+
+    async def _set_days(call: ServiceCall) -> None:
+        new_days = call.data["days"]
+        for runner in _runners_for_entity_ids(hass, call.data[ATTR_ENTITY_ID]):
+            updated = {**runner.entry.options, CONF_DAYS: new_days}
+            hass.config_entries.async_update_entry(runner.entry, options=updated)
+
     hass.services.async_register(DOMAIN, SERVICE_FIRE, _fire, schema=_FIRE_STOP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_STOP, _stop, schema=_FIRE_STOP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_SNOOZE, _snooze, schema=_SNOOZE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_TIME, _set_time, schema=_SET_TIME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_DAYS, _set_days, schema=_SET_DAYS_SCHEMA)

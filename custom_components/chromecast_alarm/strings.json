@@ -47,6 +47,8 @@
   "services": {
     "fire": { "name": "Fire alarm now", "description": "Fire one or more alarms immediately." },
     "stop": { "name": "Stop alarm playback", "description": "Stop ongoing playback." },
-    "snooze": { "name": "Snooze alarm", "description": "Stop and re-fire after the snooze duration." }
+    "snooze": { "name": "Snooze alarm", "description": "Stop and re-fire after the snooze duration." },
+    "set_time": { "name": "Set alarm time", "description": "Change the alarm time (HH:MM format)." },
+    "set_days": { "name": "Set alarm days", "description": "Change the active days for the alarm." }
   }
 }

@@ -36,6 +36,8 @@ STORAGE_KEY_TEMPLATE = f"{DOMAIN}_state_{{entry_id}}"
 SERVICE_FIRE = "fire"
 SERVICE_STOP = "stop"
 SERVICE_SNOOZE = "snooze"
+SERVICE_SET_TIME = "set_time"
+SERVICE_SET_DAYS = "set_days"
 
 # Hass data key for shared runner registry
 DATA_RUNNERS = "runners"
