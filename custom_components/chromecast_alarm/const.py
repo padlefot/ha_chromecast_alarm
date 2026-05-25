@@ -13,6 +13,8 @@ CONF_VOLUME = "volume"
 CONF_SNOOZE_MINUTES = "snooze_minutes"
 CONF_STOP_AFTER_MINUTES = "stop_after_minutes"
 CONF_LIBRARY = "library"
+CONF_SKIP_HOLIDAYS = "skip_holidays"
+CONF_HOLIDAY_COUNTRY = "holiday_country"
 
 # Defaults
 DEFAULT_TIME = "07:00:00"
@@ -20,6 +22,8 @@ DEFAULT_DAYS = ["mon", "tue", "wed", "thu", "fri"]
 DEFAULT_VOLUME = 0.4
 DEFAULT_SNOOZE_MINUTES = 9
 DEFAULT_STOP_AFTER_MINUTES = 30
+DEFAULT_SKIP_HOLIDAYS = False
+DEFAULT_HOLIDAY_COUNTRY = "NO"
 
 # Day codes (matches Python's calendar / weekday names lowercased)
 DAY_CODES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]

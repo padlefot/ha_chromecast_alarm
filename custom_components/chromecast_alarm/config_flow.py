@@ -12,7 +12,9 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_DAYS,
+    CONF_HOLIDAY_COUNTRY,
     CONF_LIBRARY,
+    CONF_SKIP_HOLIDAYS,
     CONF_SNOOZE_MINUTES,
     CONF_STOP_AFTER_MINUTES,
     CONF_TARGET,
@@ -20,6 +22,8 @@ from .const import (
     CONF_VOLUME,
     DAY_CODES,
     DEFAULT_DAYS,
+    DEFAULT_HOLIDAY_COUNTRY,
+    DEFAULT_SKIP_HOLIDAYS,
     DEFAULT_SNOOZE_MINUTES,
     DEFAULT_STOP_AFTER_MINUTES,
     DEFAULT_TIME,
@@ -51,6 +55,35 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
                     ],
                     multiple=True,
                     mode=selector.SelectSelectorMode.LIST,
+                )
+            ),
+            vol.Required(
+                CONF_SKIP_HOLIDAYS,
+                default=defaults.get(CONF_SKIP_HOLIDAYS, DEFAULT_SKIP_HOLIDAYS),
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_HOLIDAY_COUNTRY,
+                default=defaults.get(CONF_HOLIDAY_COUNTRY, DEFAULT_HOLIDAY_COUNTRY),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        selector.SelectOptionDict(value="NO", label="Norway"),
+                        selector.SelectOptionDict(value="SE", label="Sweden"),
+                        selector.SelectOptionDict(value="DK", label="Denmark"),
+                        selector.SelectOptionDict(value="FI", label="Finland"),
+                        selector.SelectOptionDict(value="DE", label="Germany"),
+                        selector.SelectOptionDict(value="GB", label="United Kingdom"),
+                        selector.SelectOptionDict(value="US", label="United States"),
+                        selector.SelectOptionDict(value="NL", label="Netherlands"),
+                        selector.SelectOptionDict(value="FR", label="France"),
+                        selector.SelectOptionDict(value="ES", label="Spain"),
+                        selector.SelectOptionDict(value="IT", label="Italy"),
+                        selector.SelectOptionDict(value="PL", label="Poland"),
+                        selector.SelectOptionDict(value="AT", label="Austria"),
+                        selector.SelectOptionDict(value="CH", label="Switzerland"),
+                        selector.SelectOptionDict(value="PT", label="Portugal"),
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
             vol.Required(

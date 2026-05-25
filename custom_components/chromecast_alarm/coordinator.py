@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+
+import holidays
 from datetime import date, datetime, time, timedelta
 from typing import Any, Callable
 
@@ -17,7 +19,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DAYS,
+    CONF_HOLIDAY_COUNTRY,
     CONF_LIBRARY,
+    CONF_SKIP_HOLIDAYS,
     CONF_SNOOZE_MINUTES,
     CONF_STOP_AFTER_MINUTES,
     CONF_TARGET,
@@ -25,6 +29,8 @@ from .const import (
     CONF_VOLUME,
     DAY_CODES,
     DEFAULT_DAYS,
+    DEFAULT_HOLIDAY_COUNTRY,
+    DEFAULT_SKIP_HOLIDAYS,
     DEFAULT_SNOOZE_MINUTES,
     DEFAULT_STOP_AFTER_MINUTES,
     DEFAULT_TIME,
@@ -173,6 +179,24 @@ class AlarmRunner:
         return [i for i in lib if isinstance(i, dict) and i.get("url")]
 
     @property
+    def skip_holidays(self) -> bool:
+        return bool(self._options.get(CONF_SKIP_HOLIDAYS, DEFAULT_SKIP_HOLIDAYS))
+
+    @property
+    def holiday_country(self) -> str:
+        return str(self._options.get(CONF_HOLIDAY_COUNTRY, DEFAULT_HOLIDAY_COUNTRY))
+
+    def _is_skipped_holiday(self, check_date: date) -> bool:
+        """Return True if the date is a public holiday and skip_holidays is on."""
+        if not self.skip_holidays:
+            return False
+        try:
+            return check_date in holidays.country_holidays(self.holiday_country)
+        except Exception:
+            _LOGGER.warning("[%s] Unknown holiday country: %s", self.entry.title, self.holiday_country)
+            return False
+
+    @property
     def enabled(self) -> bool:
         return self._enabled
 
@@ -265,8 +289,12 @@ class AlarmRunner:
     def _on_clock_tick(self, now: datetime) -> None:
         if not self._enabled:
             return
-        weekday = DAY_CODES[dt_util.as_local(now).weekday()]
+        local_now = dt_util.as_local(now)
+        weekday = DAY_CODES[local_now.weekday()]
         if weekday not in self.days:
+            return
+        if self._is_skipped_holiday(local_now.date()):
+            _LOGGER.debug("[%s] Skipping fire — public holiday", self.entry.title)
             return
         if self.is_dismissed_today:
             _LOGGER.debug("[%s] Skipping fire — dismissed for today", self.entry.title)
@@ -368,6 +396,8 @@ class AlarmRunner:
             candidate_date: date = today + timedelta(days=delta)
             weekday_code = DAY_CODES[candidate_date.weekday()]
             if weekday_code not in days_set:
+                continue
+            if self._is_skipped_holiday(candidate_date):
                 continue
             candidate_local = dt_util.start_of_local_day(candidate_date).replace(
                 hour=alarm_t.hour, minute=alarm_t.minute, second=alarm_t.second, microsecond=0
