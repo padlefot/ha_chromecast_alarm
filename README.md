@@ -25,7 +25,7 @@ Install via HACS (Frontend → Custom repositories), then add to your dashboard:
 
 ```yaml
 type: custom:chromecast-alarm-card
-entity: switch.williams_wakeup_alarm
+entity: switch.morning_alarm
 ```
 
 ## Entities per alarm
@@ -51,6 +51,10 @@ The switch entity exposes these attributes for use in templates and dashboard ca
 | `chromecast_alarm.fire` | `entity_id` | Manually fire an alarm (good for testing) |
 | `chromecast_alarm.stop` | `entity_id` | Stop ongoing playback |
 | `chromecast_alarm.snooze` | `entity_id`, `minutes?` | Snooze the alarm (override duration optional) |
+| `chromecast_alarm.set_time` | `entity_id`, `time` | Change alarm time (HH:MM format) |
+| `chromecast_alarm.set_days` | `entity_id`, `days` | Change active weekdays |
+| `chromecast_alarm.set_volume` | `entity_id`, `volume` | Change alarm volume (0.0–1.0) |
+| `chromecast_alarm.set_target` | `entity_id`, `target` | Change target media player |
 
 ## Installation
 
@@ -87,6 +91,9 @@ Morning radio|http://stream.example.com/radio.mp3
 
 ## Changelog
 
+- **v0.3.5** — Retry next track when a video fails (e.g. taken down); persistent notification if all tracks fail
+- **v0.3.4** — Add `set_volume` and `set_target` services for dashboard card control
+- **v0.3.2** — Add `set_time` and `set_days` services for dashboard card control
 - **v0.3.1** — Expose alarm config as switch entity attributes for dashboard card support
 - **v0.3.0** — Skip public holidays with configurable country (100+ supported)
 - **v0.2.5** — Clear dismissed state on options change; fix re-schedule after time edit
