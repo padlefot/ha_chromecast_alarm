@@ -49,6 +49,8 @@
     "stop": { "name": "Stop alarm playback", "description": "Stop ongoing playback." },
     "snooze": { "name": "Snooze alarm", "description": "Stop and re-fire after the snooze duration." },
     "set_time": { "name": "Set alarm time", "description": "Change the alarm time (HH:MM format)." },
-    "set_days": { "name": "Set alarm days", "description": "Change the active days for the alarm." }
+    "set_days": { "name": "Set alarm days", "description": "Change the active days for the alarm." },
+    "set_volume": { "name": "Set alarm volume", "description": "Change the alarm volume (0.0–1.0)." },
+    "set_target": { "name": "Set target speaker", "description": "Change the target media player for the alarm." }
   }
 }

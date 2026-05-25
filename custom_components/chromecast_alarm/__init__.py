@@ -12,14 +12,18 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_DAYS,
+    CONF_TARGET,
     CONF_TIME,
+    CONF_VOLUME,
     DAY_CODES,
     DATA_RUNNERS,
     DOMAIN,
     PLATFORMS,
     SERVICE_FIRE,
     SERVICE_SET_DAYS,
+    SERVICE_SET_TARGET,
     SERVICE_SET_TIME,
+    SERVICE_SET_VOLUME,
     SERVICE_SNOOZE,
     SERVICE_STOP,
 )
@@ -103,6 +107,20 @@ _SET_DAYS_SCHEMA = vol.Schema(
     }
 )
 
+_SET_VOLUME_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required("volume"): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+    }
+)
+
+_SET_TARGET_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required("target"): cv.entity_id,
+    }
+)
+
 
 def _runners_for_entity_ids(hass: HomeAssistant, entity_ids: list[str]) -> list[AlarmRunner]:
     """Resolve entity_ids to runners. Accepts switch.<slug> entities owned by this domain."""
@@ -152,8 +170,22 @@ def _register_services(hass: HomeAssistant) -> None:
             updated = {**runner.entry.options, CONF_DAYS: new_days}
             hass.config_entries.async_update_entry(runner.entry, options=updated)
 
+    async def _set_volume(call: ServiceCall) -> None:
+        new_volume = call.data["volume"]
+        for runner in _runners_for_entity_ids(hass, call.data[ATTR_ENTITY_ID]):
+            updated = {**runner.entry.options, CONF_VOLUME: new_volume}
+            hass.config_entries.async_update_entry(runner.entry, options=updated)
+
+    async def _set_target(call: ServiceCall) -> None:
+        new_target = call.data["target"]
+        for runner in _runners_for_entity_ids(hass, call.data[ATTR_ENTITY_ID]):
+            updated = {**runner.entry.options, CONF_TARGET: new_target}
+            hass.config_entries.async_update_entry(runner.entry, options=updated)
+
     hass.services.async_register(DOMAIN, SERVICE_FIRE, _fire, schema=_FIRE_STOP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_STOP, _stop, schema=_FIRE_STOP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_SNOOZE, _snooze, schema=_SNOOZE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_SET_TIME, _set_time, schema=_SET_TIME_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_SET_DAYS, _set_days, schema=_SET_DAYS_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_VOLUME, _set_volume, schema=_SET_VOLUME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_TARGET, _set_target, schema=_SET_TARGET_SCHEMA)

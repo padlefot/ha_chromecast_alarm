@@ -38,6 +38,8 @@ SERVICE_STOP = "stop"
 SERVICE_SNOOZE = "snooze"
 SERVICE_SET_TIME = "set_time"
 SERVICE_SET_DAYS = "set_days"
+SERVICE_SET_VOLUME = "set_volume"
+SERVICE_SET_TARGET = "set_target"
 
 # Hass data key for shared runner registry
 DATA_RUNNERS = "runners"
