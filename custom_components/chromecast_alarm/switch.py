@@ -72,6 +72,7 @@ class ChromecastAlarmSwitch(SwitchEntity, RestoreEntity):
             "skip_holidays": self._runner.skip_holidays,
             "holiday_country": self._runner.holiday_country,
             "target": self._runner.target,
+            "targets": self._runner.targets,
             "library_count": len(self._runner.library),
         }
 

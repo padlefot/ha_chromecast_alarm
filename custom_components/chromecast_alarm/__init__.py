@@ -117,7 +117,7 @@ _SET_VOLUME_SCHEMA = vol.Schema(
 _SET_TARGET_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required("target"): cv.entity_id,
+        vol.Required("target"): vol.Any(cv.entity_id, cv.entity_ids),
     }
 )
 
@@ -177,9 +177,10 @@ def _register_services(hass: HomeAssistant) -> None:
             hass.config_entries.async_update_entry(runner.entry, options=updated)
 
     async def _set_target(call: ServiceCall) -> None:
-        new_target = call.data["target"]
+        raw = call.data["target"]
+        new_targets = raw if isinstance(raw, list) else [raw]
         for runner in _runners_for_entity_ids(hass, call.data[ATTR_ENTITY_ID]):
-            updated = {**runner.entry.options, CONF_TARGET: new_target}
+            updated = {**runner.entry.options, CONF_TARGET: new_targets}
             hass.config_entries.async_update_entry(runner.entry, options=updated)
 
     hass.services.async_register(DOMAIN, SERVICE_FIRE, _fire, schema=_FIRE_STOP_SCHEMA)

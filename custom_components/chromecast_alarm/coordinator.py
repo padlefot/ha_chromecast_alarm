@@ -139,8 +139,20 @@ class AlarmRunner:
         return merged
 
     @property
+    def targets(self) -> list[str]:
+        """Return list of target media_player entity IDs (handles legacy single-string)."""
+        raw = self._options.get(CONF_TARGET, [])
+        if isinstance(raw, str):
+            return [raw] if raw else []
+        if isinstance(raw, list):
+            return [t for t in raw if t]
+        return []
+
+    @property
     def target(self) -> str:
-        return self._options.get(CONF_TARGET, "")
+        """Primary target (first in list) — kept for backward compat."""
+        targets = self.targets
+        return targets[0] if targets else ""
 
     @property
     def alarm_time(self) -> time:
@@ -228,21 +240,22 @@ class AlarmRunner:
         await self._do_fire()
 
     async def async_stop_playback(self) -> None:
-        """Stop ongoing playback on the target media player and cancel auto-stop."""
+        """Stop ongoing playback on all target media players and cancel auto-stop."""
         if self._unsub_autostop:
             self._unsub_autostop()
             self._unsub_autostop = None
-        if not self.target:
+        if not self.targets:
             return
-        try:
-            await self.hass.services.async_call(
-                "media_player",
-                "media_stop",
-                {"entity_id": self.target},
-                blocking=False,
-            )
-        except Exception:
-            _LOGGER.exception("[%s] media_stop failed", self.entry.title)
+        for target in self.targets:
+            try:
+                await self.hass.services.async_call(
+                    "media_player",
+                    "media_stop",
+                    {"entity_id": target},
+                    blocking=False,
+                )
+            except Exception:
+                _LOGGER.exception("[%s] media_stop failed for %s", self.entry.title, target)
         self._is_firing = False
         self._notify()
 
@@ -313,7 +326,7 @@ class AlarmRunner:
         await self._do_fire()
 
     async def _do_fire(self) -> None:
-        if not self.target:
+        if not self.targets:
             _LOGGER.warning("[%s] No target media_player configured; cannot fire", self.entry.title)
             return
         if not self.library:
@@ -341,35 +354,43 @@ class AlarmRunner:
                 )
                 continue
 
-            # Step 2: Cast to speaker
-            try:
-                await self.hass.services.async_call(
-                    "media_player",
-                    "media_stop",
-                    {"entity_id": self.target},
-                    blocking=True,
-                )
-                await asyncio.sleep(1)
-                await self.hass.services.async_call(
-                    "media_player",
-                    "volume_set",
-                    {"entity_id": self.target, "volume_level": self.volume},
-                    blocking=True,
-                )
-                await asyncio.sleep(1)
-                await self.hass.services.async_call(
-                    "media_player",
-                    "play_media",
-                    {
-                        "entity_id": self.target,
-                        "media_content_id": media_content_id,
-                        "media_content_type": "music",
-                    },
-                    blocking=False,
-                )
-            except Exception:
+            # Step 2: Cast to all target speakers
+            any_success = False
+            for target in self.targets:
+                try:
+                    await self.hass.services.async_call(
+                        "media_player",
+                        "media_stop",
+                        {"entity_id": target},
+                        blocking=True,
+                    )
+                    await asyncio.sleep(1)
+                    await self.hass.services.async_call(
+                        "media_player",
+                        "volume_set",
+                        {"entity_id": target, "volume_level": self.volume},
+                        blocking=True,
+                    )
+                    await asyncio.sleep(1)
+                    await self.hass.services.async_call(
+                        "media_player",
+                        "play_media",
+                        {
+                            "entity_id": target,
+                            "media_content_id": media_content_id,
+                            "media_content_type": "music",
+                        },
+                        blocking=False,
+                    )
+                    any_success = True
+                except Exception:
+                    _LOGGER.warning(
+                        "[%s] play_media failed on %s", self.entry.title, target,
+                    )
+
+            if not any_success:
                 _LOGGER.warning(
-                    "[%s] play_media failed for %s, trying next track",
+                    "[%s] All speakers failed for %s, trying next track",
                     self.entry.title, url,
                 )
                 continue
@@ -377,7 +398,9 @@ class AlarmRunner:
             # Success — mark as firing and set up auto-stop
             self._is_firing = True
             if self._event_callback:
-                self._event_callback("alarm_fired", {"label": label, "url": url, "target": self.target})
+                self._event_callback("alarm_fired", {
+                    "label": label, "url": url, "targets": self.targets,
+                })
             if self._unsub_autostop:
                 self._unsub_autostop()
             self._unsub_autostop = async_call_later(

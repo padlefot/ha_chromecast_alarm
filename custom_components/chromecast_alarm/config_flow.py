@@ -38,9 +38,9 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
         {
             vol.Required("name", default=defaults.get("name", "")): str,
             vol.Required(
-                CONF_TARGET, default=defaults.get(CONF_TARGET, "")
+                CONF_TARGET, default=defaults.get(CONF_TARGET, [])
             ): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="media_player")
+                selector.EntitySelectorConfig(domain="media_player", multiple=True)
             ),
             vol.Required(
                 CONF_TIME, default=defaults.get(CONF_TIME, DEFAULT_TIME)
