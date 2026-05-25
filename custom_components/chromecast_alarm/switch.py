@@ -57,6 +57,23 @@ class ChromecastAlarmSwitch(SwitchEntity, RestoreEntity):
     def is_on(self) -> bool:
         return self._runner.enabled
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        nf = self._runner.next_fire
+        return {
+            "alarm_time": str(self._runner.alarm_time),
+            "days": self._runner.days,
+            "volume": self._runner.volume,
+            "next_fire": nf.isoformat() if nf else None,
+            "is_dismissed_today": self._runner.is_dismissed_today,
+            "snooze_minutes": self._runner.snooze_minutes,
+            "stop_after_minutes": self._runner.stop_after_minutes,
+            "skip_holidays": self._runner.skip_holidays,
+            "holiday_country": self._runner.holiday_country,
+            "target": self._runner.target,
+            "library_count": len(self._runner.library),
+        }
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._runner.async_set_enabled(True)
         self.async_write_ha_state()
