@@ -319,58 +319,87 @@ class AlarmRunner:
         if not self.library:
             _LOGGER.warning("[%s] Library is empty; nothing to play", self.entry.title)
             return
-        item = random.choice(self.library)
-        url = item.get("url", "")
-        label = item.get("label") or url
-        _LOGGER.info("[%s] Firing → %s : %s", self.entry.title, label, url)
-        try:
-            media_content_id = url
-            if is_youtube_url(url):
-                media_content_id = await extract_audio_url(self.hass, url)
-        except Exception:
-            _LOGGER.exception("[%s] Failed to extract media URL for %s", self.entry.title, url)
+
+        # Shuffle library and try each track until one works.
+        candidates = list(self.library)
+        random.shuffle(candidates)
+
+        for item in candidates:
+            url = item.get("url", "")
+            label = item.get("label") or url
+            _LOGGER.info("[%s] Trying → %s : %s", self.entry.title, label, url)
+
+            # Step 1: Resolve media URL
+            try:
+                media_content_id = url
+                if is_youtube_url(url):
+                    media_content_id = await extract_audio_url(self.hass, url)
+            except Exception:
+                _LOGGER.warning(
+                    "[%s] Failed to extract media URL for %s, trying next track",
+                    self.entry.title, url,
+                )
+                continue
+
+            # Step 2: Cast to speaker
+            try:
+                await self.hass.services.async_call(
+                    "media_player",
+                    "media_stop",
+                    {"entity_id": self.target},
+                    blocking=True,
+                )
+                await asyncio.sleep(1)
+                await self.hass.services.async_call(
+                    "media_player",
+                    "volume_set",
+                    {"entity_id": self.target, "volume_level": self.volume},
+                    blocking=True,
+                )
+                await asyncio.sleep(1)
+                await self.hass.services.async_call(
+                    "media_player",
+                    "play_media",
+                    {
+                        "entity_id": self.target,
+                        "media_content_id": media_content_id,
+                        "media_content_type": "music",
+                    },
+                    blocking=False,
+                )
+            except Exception:
+                _LOGGER.warning(
+                    "[%s] play_media failed for %s, trying next track",
+                    self.entry.title, url,
+                )
+                continue
+
+            # Success — mark as firing and set up auto-stop
+            self._is_firing = True
+            if self._event_callback:
+                self._event_callback("alarm_fired", {"label": label, "url": url, "target": self.target})
+            if self._unsub_autostop:
+                self._unsub_autostop()
+            self._unsub_autostop = async_call_later(
+                self.hass, self.stop_after_minutes * 60, self._auto_stop
+            )
+            self._refresh_next_fire()
             return
-        try:
-            # Clear any existing media session before casting; without this,
-            # Chromecasts with a stale app (e.g. Music Assistant) silently
-            # reject the new stream.
-            await self.hass.services.async_call(
-                "media_player",
-                "media_stop",
-                {"entity_id": self.target},
-                blocking=True,
-            )
-            await asyncio.sleep(1)
-            await self.hass.services.async_call(
-                "media_player",
-                "volume_set",
-                {"entity_id": self.target, "volume_level": self.volume},
-                blocking=True,
-            )
-            await asyncio.sleep(1)
-            await self.hass.services.async_call(
-                "media_player",
-                "play_media",
-                {
-                    "entity_id": self.target,
-                    "media_content_id": media_content_id,
-                    "media_content_type": "music",
-                },
-                blocking=False,
-            )
-        except Exception:
-            _LOGGER.exception("[%s] play_media failed", self.entry.title)
-            return
-        self._is_firing = True
-        if self._event_callback:
-            self._event_callback("alarm_fired", {"label": label, "url": url, "target": self.target})
-        # Arm auto-stop
-        if self._unsub_autostop:
-            self._unsub_autostop()
-        self._unsub_autostop = async_call_later(
-            self.hass, self.stop_after_minutes * 60, self._auto_stop
+
+        # All tracks failed — send persistent notification
+        _LOGGER.error("[%s] All %d library tracks failed to play!", self.entry.title, len(candidates))
+        await self.hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {
+                "title": f"Alarm failed: {self.entry.title}",
+                "message": (
+                    f"All {len(candidates)} tracks in the library failed to play. "
+                    "Check your YouTube URLs — some may be taken down or unavailable."
+                ),
+                "notification_id": f"chromecast_alarm_fail_{self.entry.entry_id}",
+            },
         )
-        self._refresh_next_fire()
 
     async def _auto_stop(self, _now: Any = None) -> None:
         self._unsub_autostop = None
