@@ -61,6 +61,7 @@ class ChromecastAlarmSwitch(SwitchEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         nf = self._runner.next_fire
         return {
+            "is_firing": self._runner._is_firing,
             "alarm_time": str(self._runner.alarm_time),
             "days": self._runner.days,
             "volume": self._runner.volume,
