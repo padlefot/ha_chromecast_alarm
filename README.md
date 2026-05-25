@@ -1,28 +1,48 @@
 # Chromecast Alarm
 
-A personal Home Assistant custom integration that acts as a wake-up alarm clock — casting a randomly chosen item from a per-alarm media library to a target Chromecast (or any `media_player`) at a configured time, with snooze and dismiss support.
+A Home Assistant custom integration that acts as a wake-up alarm clock — casting a randomly chosen item from a per-alarm media library to a target Chromecast (or any `media_player`) at a configured time, with snooze, dismiss, and public holiday support.
 
 YouTube URLs are played via on-the-fly audio extraction with `yt-dlp` (bundled as a Python requirement). Local media-source paths work too.
 
 ## Features
 
-- One config entry per alarm
+- One config entry per alarm — create as many as you need
 - Built-in scheduler with weekday selection — no automations to wire
 - Random pick from a per-alarm library on each fire
 - YouTube URL playback via `yt-dlp` extraction
-- Snooze (re-fire after N minutes) and dismiss (skip until tomorrow), as proper button entities
+- Snooze (re-fire after N minutes) and dismiss (skip until tomorrow)
+- Skip public holidays — configurable country (100+ supported via `holidays` library)
+- Event entity for automation triggers (e.g. actionable notifications)
 - State survives Home Assistant restarts (snooze and dismiss are persisted)
 - Auto-stop after a configurable safety duration
+- Switch entity exposes alarm attributes for dashboard cards
+
+## Dashboard card
+
+A companion Mushroom-style Lovelace card is available: [Chromecast Alarm Card](https://github.com/padlefot/ha_chromecast_alarm_card)
+
+Install via HACS (Frontend → Custom repositories), then add to your dashboard:
+
+```yaml
+type: custom:chromecast-alarm-card
+entity: switch.williams_wakeup_alarm
+```
 
 ## Entities per alarm
 
 | Entity | Purpose |
 |---|---|
-| `switch.<slug>` | Master enable/disable |
+| `switch.<slug>` | Master enable/disable (also exposes alarm config as attributes) |
 | `button.<slug>_snooze` | Pause current alarm, re-fire after `snooze_minutes` |
 | `button.<slug>_dismiss` | Stop and suppress further fires until tomorrow |
 | `sensor.<slug>_next_fire` | Timestamp of the next scheduled fire |
 | `event.<slug>_event` | Fires `alarm_fired` event for automation triggers |
+
+### Switch attributes
+
+The switch entity exposes these attributes for use in templates and dashboard cards:
+
+`alarm_time`, `days`, `volume`, `next_fire`, `is_dismissed_today`, `snooze_minutes`, `stop_after_minutes`, `skip_holidays`, `holiday_country`, `target`, `library_count`
 
 ## Services
 
@@ -47,6 +67,8 @@ When adding an alarm, you'll be asked for:
 - **Target media player** — a Chromecast or any `media_player`.
 - **Time** — wall-clock time (HH:MM).
 - **Days** — list of weekdays.
+- **Skip public holidays** — toggle (default off). When enabled, the alarm won't fire on public holidays.
+- **Holiday country** — which country's holidays to use (default Norway). Supports 100+ countries.
 - **Volume** — 0.0–1.0; set before each fire.
 - **Snooze minutes** — default re-fire delay (default 9).
 - **Stop after minutes** — auto-stop safety (default 30).
@@ -58,14 +80,18 @@ When adding an alarm, you'll be asked for:
 ## Library example
 
 ```
-Rick Astley|https://www.youtube.com/watch?v=dQw4w9WgXcQ
+BirdsAndPiano|https://www.youtube.com/watch?v=LcOn6z-cf8Y
 Gentle bells|media-source://media_source/local/bells.mp3
 Morning radio|http://stream.example.com/radio.mp3
 ```
 
-## Status
+## Changelog
 
-v0.2 — added event entity for automation triggers, fixed repeated fire stale stream bug.
+- **v0.3.1** — Expose alarm config as switch entity attributes for dashboard card support
+- **v0.3.0** — Skip public holidays with configurable country (100+ supported)
+- **v0.2.5** — Clear dismissed state on options change; fix re-schedule after time edit
+- **v0.2.4** — Revert chime suppression; simplify fire sequence
+- **v0.2.0** — Event entity for automation triggers; fix stale Chromecast stream bug
 
 ## License
 
